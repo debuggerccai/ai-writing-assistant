@@ -48,7 +48,10 @@ if [[ ! -f "${release_dir}/docker-compose.yml" ]]; then
   exit 1
 fi
 
-docker compose -f "${release_dir}/docker-compose.yml" up -d
+# 固定项目名，避免每次从新的 release 目录启动时默认项目名变化，
+# 与历史容器/固定 container_name 冲突；同一项目下 compose 会复用或滚动更新服务。
+COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-ai-writing-assistant}" \
+  docker compose -f "${release_dir}/docker-compose.yml" up -d --remove-orphans
 
 ln -sfn "${release_dir}" "${current_link}"
 
