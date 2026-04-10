@@ -90,6 +90,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         GitHub({
           clientId: process.env.AUTH_GITHUB_ID!,
           clientSecret: process.env.AUTH_GITHUB_SECRET!,
+          // GitHub 授权响应可能带 iss（RFC 9207）；未配置 issuer 时 Auth.js 会误用默认期望并报错
+          issuer: "https://github.com/login/oauth",
         }),
       ]
       : []),
