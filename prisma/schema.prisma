@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+type Character {
+  name          String
+  personality   String
+  gender        String?
+  age           Int
+  roleArchetype String?
+  abilities     String
+  relationships String
+  speechStyle   String
+  background    String
+}
+
+model Work {
+  id          String      @id @default(auto()) @map("_id") @db.ObjectId
+  title       String      @default("未命名作品")
+  cover       String      @default("")
+  category    String?
+  theme       String?
+  world       String?
+  characters  Character[]
+  creatorId   String
+  creatorName String
+
+  creator     User        @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+
+  chapters    Chapter[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([creatorId])
+}
+
+model Chapter {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  workId    String   @db.ObjectId
+  name      String   @default("新章节")
+  content   String   @default("")
+  wordCount Int      @default(0)
+  summary   String   @default("")
+  structuredSummary Json?
+  index     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  work      Work     @relation(fields: [workId], references: [id])
+  history   HistoryEntry[]
+}
+
+type HistoryEntry {
+  id        String   @db.ObjectId
+  content   String
+  createdAt DateTime @default(now())
+}
+
+model User {
+  /// 用户唯一标识（不使用 ObjectId，避免与现有 Work.creatorId 字符串字段的兼容成本）
+  id           String   @id @default(cuid()) @map("_id")
+  email        String   @unique
+  /// OAuth 用户可无密码；仅邮箱密码登录需有值
+  passwordHash String?
+  displayName String
+
+  works Work[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

@@ -1,0 +1,90 @@
+name: Deploy to Aliyun
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+      DEPLOY_HOST: ${{ secrets.ALIYUN_HOST }}
+      DEPLOY_PORT: ${{ secrets.ALIYUN_PORT }}
+      DEPLOY_USER: ${{ secrets.ALIYUN_USER }}
+      RELEASE_SHA: ${{ github.sha }}
+      APP_ENV_PRODUCTION: ${{ secrets.APP_ENV_PRODUCTION }}
+
+    steps:
+      - name: Checkout merged commit
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v5
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build app
+        run: pnpm build
+
+      - name: Create deploy bundle
+        run: |
+          mkdir -p dist
+          if [ -z "${APP_ENV_PRODUCTION}" ]; then
+            echo "Missing APP_ENV_PRODUCTION secret."
+            exit 1
+          fi
+          printf '%s' "${APP_ENV_PRODUCTION}" > "dist/.env.production"
+          tar -czf "dist/release-${RELEASE_SHA}.tar.gz" \
+            .next/standalone \
+            .next/static \
+            public \
+            docker-compose.yml \
+            init-mongo.js \
+            scripts/deploy.remote.sh \
+            ecosystem.config.js
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.ALIYUN_SSH_KEY }}
+
+      - name: Add server to known_hosts
+        run: |
+          ssh-keyscan -p "${DEPLOY_PORT:-22}" -H "${DEPLOY_HOST}" >> ~/.ssh/known_hosts
+
+      - name: Upload bundle
+        run: |
+          ssh -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" "mkdir -p '${DEPLOY_PATH}' '${DEPLOY_PATH}/shared'"
+          scp -P "${DEPLOY_PORT:-22}" "dist/release-${RELEASE_SHA}.tar.gz" "${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PATH}/release-${RELEASE_SHA}.tar.gz"
+          scp -P "${DEPLOY_PORT:-22}" "dist/.env.production" "${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PATH}/shared/.env.production"
+          ssh -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" "chmod 600 '${DEPLOY_PATH}/shared/.env.production'"
+
+      - name: Run remote deploy script
+        run: |
+          ssh -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "DEPLOY_PATH='${DEPLOY_PATH}' RELEASE_SHA='${RELEASE_SHA}' bash -s" <<'EOF'
+          set -euo pipefail
+          release_dir="${DEPLOY_PATH}/releases/${RELEASE_SHA}"
+          archive_path="${DEPLOY_PATH}/release-${RELEASE_SHA}.tar.gz"
+
+          mkdir -p "${DEPLOY_PATH}/releases" "${DEPLOY_PATH}/shared"
+          rm -rf "${release_dir}"
+          mkdir -p "${release_dir}"
+          tar -xzf "${archive_path}" -C "${release_dir}"
+          chmod +x "${release_dir}/scripts/deploy.remote.sh"
+
+          DEPLOY_PATH="${DEPLOY_PATH}" RELEASE_SHA="${RELEASE_SHA}" bash "${release_dir}/scripts/deploy.remote.sh"
+          rm -f "${archive_path}"
+          EOF
