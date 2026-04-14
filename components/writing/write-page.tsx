@@ -1,8 +1,9 @@
 "use client";
 
-import { ArrowLeft, CornerDownLeft, Inbox, Plus } from "lucide-react";
+import { ArrowLeft, Inbox, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useContext, useState } from "react";
+import { useContext } from "react";
+import { useDefaultLayout } from "react-resizable-panels";
 
 import NavLogo from "@/components/common/nav-logo";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,11 @@ export default function WritePage() {
   } = useContext(WritingContext);
 
   const router = useRouter();
+
+  const { defaultLayout, onLayoutChanged } = useDefaultLayout({
+    id: "writing-page-layout-v1",
+    panelIds: ["writing-editor-panel", "writing-assistant-panel"],
+  });
 
 
   return (
@@ -67,9 +73,12 @@ export default function WritePage() {
           <SidebarTrigger className="absolute z-10 top-2 left-0" />
           <ResizablePanelGroup
             orientation="horizontal"
+            id="writing-page-layout-v1"
+            defaultLayout={defaultLayout}
+            onLayoutChanged={onLayoutChanged}
             className="w-full h-full"
           >
-            <ResizablePanel defaultSize="70%" minSize="50%">
+            <ResizablePanel id="writing-editor-panel" defaultSize="70%" minSize="50%">
               {
                 selectedItem?.id ? <Editor /> : <div className="w-full h-full flex items-center justify-center">
                   <Empty>
@@ -90,7 +99,7 @@ export default function WritePage() {
               }
             </ResizablePanel>
             <ResizableHandle withHandle />
-            <ResizablePanel defaultSize="30%" minSize="30%">
+            <ResizablePanel id="writing-assistant-panel" defaultSize="30%" minSize="30%">
               <WritingAssistant className="w-full h-full" />
             </ResizablePanel>
           </ResizablePanelGroup>

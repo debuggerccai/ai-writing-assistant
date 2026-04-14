@@ -141,7 +141,6 @@ export async function generateWritingStream(
     userMessage: promptParams.message ?? "",
     mode: promptParams.mode,
   });
-  console.log('userPrompt', userPrompt);
   const result = streamText({
     model: client,
     system: systemPrompt,
