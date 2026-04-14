@@ -48,6 +48,15 @@ if [[ ! -f "${release_dir}/docker-compose.yml" ]]; then
   exit 1
 fi
 
+set -a
+source "${env_shared_file}"
+set +a
+
+if [[ -z "${ME_CONFIG_BASICAUTH_USERNAME:-}" || -z "${ME_CONFIG_BASICAUTH_PASSWORD:-}" || -z "${MONGO_DB_NAME:-}" ]]; then
+  echo "MONGO_DB_NAME, ME_CONFIG_BASICAUTH_USERNAME and ME_CONFIG_BASICAUTH_PASSWORD are required in .env.production for mongo-express."
+  exit 1
+fi
+
 # 固定项目名，避免每次从新的 release 目录启动时默认项目名变化，
 # 与历史容器/固定 container_name 冲突；同一项目下 compose 会复用或滚动更新服务。
 COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-ai-writing-assistant}" \

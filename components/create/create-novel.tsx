@@ -18,8 +18,8 @@ import { Spinner } from "@/components/ui/spinner"
 import { Textarea } from "@/components/ui/textarea";
 import { Character } from "@/types/writing";
 
-import CreateCharacters, { formSchema as characterFormSchema } from "./createCharacters";
-import CreateWorld, { WorldMetadata } from "./createWorld";
+import CreateCharacters, { formSchema as characterFormSchema } from "./create-characters";
+import CreateWorld, { WorldMetadata } from "./create-world";
 
 function RequiredAsterisk() {
     return (
@@ -40,17 +40,19 @@ const formSchema = z.object({
 
 export type FormValues = z.infer<typeof formSchema>
 
+const initialFormValues: FormValues = {
+    category: "",
+    theme: "",
+    world: "",
+    characters: [],
+}
+
 export default function CreateNovel() {
     const router = useRouter()
 
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
-        defaultValues: {
-            category: "",
-            theme: "",
-            world: "",
-            characters: []
-        },
+        defaultValues: initialFormValues,
     })
 
     const [submitError, setSubmitError] = useState<string | null>(null);
@@ -78,6 +80,10 @@ export default function CreateNovel() {
                 throw new Error(result.error || `创建作品失败（${response.status}）`);
             }
 
+            // 创建成功后先清空当前页状态，避免路由缓存复用时保留旧输入
+            form.reset(initialFormValues);
+            setCharacterDialogObject({ visible: false, type: "add", editIndex: undefined, defaultValues: null, context: {} });
+            setShowCreateWorld(false);
             router.push("/novels");
         } catch (error) {
             const message = error instanceof Error ? error.message : "创建作品失败";

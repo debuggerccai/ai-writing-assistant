@@ -20,6 +20,7 @@ import WritingAssistant from "./writing-assistant";
 export default function WritePage() {
 
   const {
+    work,
     chapters,
     selectedItem,
     onCreateChapter,
@@ -53,6 +54,14 @@ export default function WritePage() {
           <SidebarContent>
             <ChapterList />
           </SidebarContent>
+          <SidebarFooter>
+            <div className="box-border flex flex-col items-start p-4 gap-1 bg-white border border-slate-100 rounded-xl">
+              <p className="text-xs text-slate-500">当前作品</p>
+              <p className="truncate text-sm font-medium text-slate-800">
+                {work?.title || "未命名作品"}
+              </p>
+            </div>
+          </SidebarFooter>
         </Sidebar>
         <SidebarInset className="!m-0 !rounded-none">
           <SidebarTrigger className="absolute z-10 top-2 left-0" />

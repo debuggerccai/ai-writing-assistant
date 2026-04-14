@@ -19,8 +19,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AI 写作助手",
-  description: "由 Next.js 驱动的智能写作助手",
+  title: "笔胥",
+  description: "AI 赋能的深度写作助手，为您构建宏大的故事世界。",
 };
 
 export default function RootLayout({

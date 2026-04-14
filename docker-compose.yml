@@ -30,5 +30,18 @@ services:
       retries: 3
       start_period: 10s
 
+  mongo-express:
+    image: mongo-express:latest
+    depends_on:
+      - mongodb
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_URL: mongodb://mongodb:27017/${MONGO_DB_NAME:-ai-writing-assistant}
+      ME_CONFIG_BASICAUTH: "true"
+      ME_CONFIG_BASICAUTH_USERNAME: ${ME_CONFIG_BASICAUTH_USERNAME}
+      ME_CONFIG_BASICAUTH_PASSWORD: ${ME_CONFIG_BASICAUTH_PASSWORD}
+    restart: unless-stopped
+
 volumes:
   mongo_data:

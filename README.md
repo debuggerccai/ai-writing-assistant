@@ -91,6 +91,9 @@ pnpm dev:full
 | `DASHSCOPE_EMBEDDING_MODEL` | 可选，默认 `text-embedding-v4` |
 | `QDRANT_URL` | 可选，默认 `http://localhost:6333` |
 | `QDRANT_API_KEY` | 云托管 Qdrant 时填写 |
+| `MONGO_DB_NAME` | 可选，`mongo-express` 连接的数据库名，默认 `ai-writing-assistant` |
+| `ME_CONFIG_BASICAUTH_USERNAME` | 本地 `mongo-express` UI 登录账号 |
+| `ME_CONFIG_BASICAUTH_PASSWORD` | 本地 `mongo-express` UI 登录密码 |
 
 ### 4. 账号与多租户（Auth）
 
@@ -186,6 +189,7 @@ pnpm dev
 2. 打包 `.next/standalone`、`.next/static`、`public`、`ecosystem.config.js`、`scripts/deploy.remote.sh` 等运行文件
 3. 通过 SSH 上传到阿里云
 4. 远端执行部署脚本，链接静态资源后切换 `current` 并 `pm2 startOrReload`（无需 `pnpm install`）
+5. 同步拉起 `mongodb` / `qdrant` / `mongo-express`（其中 Mongo Express 默认开放 `8081`）
 
 ### 仓库内新增文件
 
@@ -217,6 +221,19 @@ mkdir -p /var/www/ai-writing-assistant/releases
 
 环境变量不需要在服务器手工维护。请将完整 `.env.production` 内容放到 GitHub Secret `APP_ENV_PRODUCTION`（支持多行），工作流每次部署会自动下发到 `${DEPLOY_PATH}/shared/.env.production`。
 
+`mongo-express` 相关变量统一放在 `APP_ENV_PRODUCTION` 中下发，请在 `.env.production` 中补充：
+
+- `MONGO_DB_NAME=ai-writing-assistant`
+- `ME_CONFIG_BASICAUTH_USERNAME=<your_username>`
+- `ME_CONFIG_BASICAUTH_PASSWORD=<your_strong_password>`
+
+### mongo-express 访问说明
+
+- Compose 已内置 `mongo-express` 服务，并固定映射 `8081:8081`。
+- `ME_CONFIG_MONGODB_URL` 由 compose 组装为 `mongodb://mongodb:27017/${MONGO_DB_NAME}?replicaSet=rs0`。
+- 部署后可通过 `http://<server-ip>:8081` 访问，输入上述 Basic Auth 账号密码登录。
+- 强烈建议在阿里云安全组中仅放行固定办公 IP 到 `8081`。
+
 设置 PM2 开机自启（首次手工执行一次）：
 
 ```bash
@@ -245,3 +262,4 @@ ${DEPLOY_PATH}
 ln -sfn /var/www/ai-writing-assistant/releases/<old_sha> /var/www/ai-writing-assistant/current
 APP_CWD=/var/www/ai-writing-assistant/current pm2 startOrReload /var/www/ai-writing-assistant/current/ecosystem.config.js --update-env
 ```
+

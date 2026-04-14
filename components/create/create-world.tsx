@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 
 import { Conversation, ConversationContent } from "@/components/ai-elements/conversation";
 import { Message, MessageAction, MessageActions, MessageContent, MessageResponse } from "@/components/ai-elements/message";
-import ChatInput from "@/components/chat/ChatInput";
+import ChatInput from "@/components/chat/chat-input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 

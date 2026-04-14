@@ -36,9 +36,9 @@ export default function Home() {
                                 <ArrowRight />
                             </Button>
                         </Link>
-                        <Button className="bg-white/5 hover:bg-white/5 border border-white/10 text-white/50 hover:text-white backdrop-blur-sm" variant="outline" size="lg">
+                        {/* <Button className="bg-white/5 hover:bg-white/5 border border-white/10 text-white/50 hover:text-white backdrop-blur-sm" variant="outline" size="lg">
                             了解更多
-                        </Button>
+                        </Button> */}
                     </div>
                 </div>
             </section>

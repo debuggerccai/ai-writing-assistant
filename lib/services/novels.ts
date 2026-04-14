@@ -58,6 +58,24 @@ export async function createNovelForUser(
   });
 }
 
+export async function updateNovelTitleForUser(userId: string, workId: string, title: string) {
+  const trimmedTitle = title.trim();
+  if (!trimmedTitle) {
+    return { success: false as const, reason: "invalid_title" as const };
+  }
+
+  const result = await prisma.work.updateMany({
+    where: { id: workId, creatorId: userId },
+    data: { title: trimmedTitle },
+  });
+
+  if (result.count === 0) {
+    return { success: false as const, reason: "not_found" as const };
+  }
+
+  return { success: true as const, title: trimmedTitle };
+}
+
 export async function deleteNovelForUser(userId: string, workId: string) {
   const work = await prisma.work.findFirst({
     where: { id: workId, creatorId: userId },

@@ -19,7 +19,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { WritingContext } from "@/contexts/writing-context";
 import { cn } from "@/lib/utils";
 
-import ChatInput from "../chat/ChatInput";
+import ChatInput from "../chat/chat-input";
 
 interface WritingAssistantProps {
     className?: string;

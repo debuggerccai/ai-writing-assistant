@@ -1,6 +1,6 @@
 "use client";
 
-import { Clock, Ellipsis, Inbox, Plus, Trash2 } from "lucide-react";
+import { Clock, Ellipsis, Inbox, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   Empty,
-  EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
@@ -24,15 +23,23 @@ import {
 import { formatRelativeTime, thousandSeparator } from "@/lib/utils";
 import { Work } from "@/types";
 
+import { EditNovelSettingsDialog } from "./edit-novel-settings-dialog";
+
 type WorkWithStats = Work & { totalWords?: number; chapterCount?: number };
 
 type NovelsListProps = {
   works: WorkWithStats[];
   onDeleteNovelAction: (workId: string) => Promise<void>;
+  onUpdateNovelSettingsAction: (workId: string, payload: { title: string }) => Promise<{ title: string }>;
 };
 
-export function NovelsList({ works: initialWorks, onDeleteNovelAction }: NovelsListProps) {
+export function NovelsList({
+  works: initialWorks,
+  onDeleteNovelAction,
+  onUpdateNovelSettingsAction,
+}: NovelsListProps) {
   const [works, setWorks] = useState<WorkWithStats[]>(initialWorks);
+  const [editingWork, setEditingWork] = useState<{ id: string; title: string } | null>(null);
 
   useEffect(() => {
     setWorks(initialWorks);
@@ -46,7 +53,30 @@ export function NovelsList({ works: initialWorks, onDeleteNovelAction }: NovelsL
       } catch (error) {
         console.error("[NOVEL_DELETE_ERROR]", error);
       }
-    }, [onDeleteNovelAction]);
+    },
+    [onDeleteNovelAction]
+  );
+
+  const handleUpdateSettings = useCallback(
+    async (title: string) => {
+      if (!editingWork) return;
+
+      const result = await onUpdateNovelSettingsAction(editingWork.id, { title });
+      setWorks((current) =>
+        current.map((item) =>
+          item.id === editingWork.id
+            ? {
+              ...item,
+              title: result.title,
+              updatedAt: new Date() as unknown as Work["updatedAt"],
+            }
+            : item
+        )
+      );
+      setEditingWork(null);
+    },
+    [editingWork, onUpdateNovelSettingsAction]
+  );
 
   if (works.length === 0) {
     return (
@@ -98,6 +128,10 @@ export function NovelsList({ works: initialWorks, onDeleteNovelAction }: NovelsL
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
+                  <DropdownMenuItem onSelect={() => setEditingWork({ id: work.id, title: work.title })}>
+                    <Pencil />
+                    作品设置
+                  </DropdownMenuItem>
                   <DropdownMenuItem
                     variant="destructive"
                     onSelect={() => handleDelete(work.id)}
@@ -117,6 +151,14 @@ export function NovelsList({ works: initialWorks, onDeleteNovelAction }: NovelsL
           </CardContent>
         </Card>
       ))}
+      <EditNovelSettingsDialog
+        open={!!editingWork}
+        defaultTitle={editingWork?.title ?? ""}
+        onOpenChange={(open) => {
+          if (!open) setEditingWork(null);
+        }}
+        onConfirm={handleUpdateSettings}
+      />
     </div>
   );
 }

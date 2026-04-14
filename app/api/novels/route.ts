@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath, revalidateTag } from "next/cache";
 import * as z from "zod";
 
 import { requireUser } from "@/lib/auth/requireUser";
+import { cacheTags } from "@/lib/services/cacheTags";
 import { createNovelForUser, listNovelsByUser } from "@/lib/services/novels";
 
 const createCharacterSchema = z.object({
@@ -45,6 +47,11 @@ export async function POST(req: NextRequest) {
       world: input.data.world,
       characters: input.data.characters,
     });
+
+    revalidateTag(cacheTags.novelsByUser(user.id), "max");
+    revalidateTag(cacheTags.novelById(created.id), "max");
+    revalidateTag(cacheTags.chaptersByWork(created.id), "max");
+    revalidatePath("/novels");
 
     return NextResponse.json({ success: true, work: created });
   } catch (error) {

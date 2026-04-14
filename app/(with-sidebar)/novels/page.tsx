@@ -5,7 +5,7 @@ import { NovelsList } from "@/components/novels";
 import { Button } from "@/components/ui/button";
 import { getMyNovels } from "@/lib/services/novels.server";
 
-import { deleteNovelAction } from "./actions";
+import { deleteNovelAction, updateNovelSettingsAction } from "./actions";
 
 export default async function NovelsPage() {
   const works = await getMyNovels();
@@ -20,7 +20,11 @@ export default async function NovelsPage() {
           </Button>
         </Link>
       </div>
-      <NovelsList works={works} onDeleteNovelAction={deleteNovelAction} />
+      <NovelsList
+        works={works}
+        onDeleteNovelAction={deleteNovelAction}
+        onUpdateNovelSettingsAction={updateNovelSettingsAction}
+      />
     </div>
   );
 }

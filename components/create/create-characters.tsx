@@ -10,7 +10,7 @@ import * as z from "zod";
 
 import { Conversation, ConversationContent } from "@/components/ai-elements/conversation";
 import { Message, MessageAction, MessageActions, MessageContent, MessageResponse } from "@/components/ai-elements/message";
-import ChatInput from "@/components/chat/ChatInput";
+import ChatInput from "@/components/chat/chat-input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -66,7 +66,7 @@ export default function CreateCharacters({
         defaultValues: (type === 'edit' && defaultValues) ? { ...defaultValues } : {
             name: "",
             gender: "",
-            age: 18,
+            age: undefined,
             roleArchetype: "",
             personality: "",
             abilities: "",
@@ -148,9 +148,8 @@ export default function CreateCharacters({
                                                 {...field}
                                                 id={field.name}
                                                 aria-invalid={fieldState.invalid}
-                                                placeholder="例如：林小雨"
+                                                placeholder="例如：徐凤年"
                                                 autoComplete="off"
-                                                onClick={() => console.log(111)}
                                             />
                                         </Field>
                                     )}
@@ -190,6 +189,7 @@ export default function CreateCharacters({
                                             </FieldLabel>
                                             <Input
                                                 {...field}
+                                                value={field.value ?? ""}
                                                 id={field.name}
                                                 aria-invalid={fieldState.invalid}
                                                 autoComplete="off"
@@ -337,10 +337,10 @@ export default function CreateCharacters({
                                                 (part, i) => {
                                                     switch (part.type) {
                                                         case 'text':
-                                                            return <MessageResponse key={i}>{part.text}</MessageResponse>
+                                                            return <MessageResponse key={`${part.type}-${i}`}>{part.text}</MessageResponse>
                                                         case 'tool-deliver_character_metadata':
                                                             return (
-                                                                <MessageActions>
+                                                                <MessageActions key={`${part.type}-${i}`}>
                                                                     {status === 'streaming' && <p className="text-sm text-gray-500">正在整理结构化数据...</p>}
                                                                     {status === 'ready' && <Button className="ml-auto cursor-pointer" onClick={handleSave}>一键应用</Button>}
                                                                 </MessageActions>
